@@ -1,0 +1,46 @@
+# Polyglot Multi-Target ETL Pipeline (SQLite & MongoDB)
+
+## 📌 Overview
+An enterprise-grade hybrid ETL pipeline engineered to ingest messy retail transactions (CSV) alongside semi-structured customer feedback logs (JSON). The pipeline performs data deduplication, missing value imputation, and ISO date standardization before storing transformed data into a dual-target architecture: a relational SQLite database (star schema) and a Document NoSQL MongoDB database.
+
+## 🛠 Tech Stack
+* **Language:** Python 3.x, SQL
+* **Data Transformation:** pandas, NumPy, JSON parsing
+* **Relational Storage:** SQLite (`retail_warehouse.db`)
+* **NoSQL Storage:** MongoDB (`pymongo`)
+* **Architecture:** Polyglot Persistence / Multi-Target Ingestion
+
+## ⚡ Core Pipeline Architecture
+
+```text
+               ┌───────────────────────────┐
+               │ warehouse_messy_data.csv  │
+               └─────────────┬─────────────┘
+                             │
+                             ▼
+ ┌────────────────┐   ┌─────────────┐   ┌───────────────────────────┐
+ │ feedback.json  ├──►│ Python ETL  ├──►│ SQLite (Relational OLAP)  │
+ └────────────────┘   └──────┬──────┘   └───────────────────────────┘
+                             │
+                             ▼
+                      ┌─────────────┐
+                      │ MongoDB     │
+                      │ (Document)  │
+                      └─────────────┘
+Extraction: Ingests transaction records (warehouse_messy_data.csv) and generates/parses customer feedback and device info payloads from landing_zone/raw_feedback_logs.json.
+
+Transformation & Data Cleansing:
+
+Removes duplicate transactions.
+
+Standardizes date formats to ISO-8601 (YYYY-MM-DD).
+
+Imputes missing customer_id flags and numerical column anomalies.
+
+Reshapes and merges nested JSON metadata (customer ratings, reviews, IP/device logs) onto core sales records using transaction lookup keys.
+
+Dual-Target Loading:
+
+Relational Target: Normalizes data into fact_sales and dim_store tables inside SQLite.
+
+Document Target: Inserts rich nested JSON documents into MongoDB collection (sales_documents).
